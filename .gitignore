@@ -1,0 +1,60 @@
+﻿# Visual Studio Code files
+.vscode/
+
+# Visual Studio files
+*.obj
+*.pdb
+*.cache
+*.dll
+*.exe
+*.suo
+*.user
+*.bak
+*.vs10x
+*.ncrunch*
+[Tt]est[Rr]esult*
+[Bb]uild[Ll]og.*
+*.log
+*.BinSkim
+
+# Other files
+bin/
+obj/
+*.userprefs
+*.bak
+*.cache
+*.tmp
+*.log
+*.sql
+*.testsettings
+TestResults
+[Tt]est[Rr]esult.*
+_ReSharper*
+*.resharper*
+*.dotSettings
+
+# Windows folders
+$RECYCLE.BIN/
+Thumbs.db
+
+# Mac folders
+.DS_Store
+
+# Nuget packages
+/packages/*
+!.nuget/NuGet.Config
+*.nupkg
+*.snupkg
+
+# Build results
+build/
+
+# Ignore project-specific files that vary by environment
+*.launchSettings.json
+*.userSecrets.json
+*.appsettings.json
+*.appsettings.*.json
+
+# Rider specific files
+.idea/
+*.idea
