@@ -71,7 +71,6 @@ public class TournamentManagementCommands : InteractionModuleBase<ShardedInterac
 		}
 
 		var staffMembers = new List<StaffMember>();
-		var staffRoles = new Dictionary<string, StaffRole>();
 
 		using (var httpClient = new HttpClient())
 		{
@@ -81,18 +80,20 @@ public class TournamentManagementCommands : InteractionModuleBase<ShardedInterac
 				using (var contentStream = await httpResponse.Content.ReadAsStreamAsync())
 				using (var reader = new StreamReader(contentStream, Encoding.Default))
 				{
-					(staffMembers, staffRoles) = ParseCsv(reader);
+					string csvContent = await reader.ReadToEndAsync();
+					staffMembers = ParseCsv(csvContent);
 				}
 			}
 		}
 
 		await _staffMemberRepository.AddRangeAsync(staffMembers);
-		await _staffRoleRepository.AddRangeAsync(staffRoles.Values);
 
 		var roleSb = new StringBuilder();
-		foreach (var staffRole in staffRoles.Values)
+		// Get unique staff roles from all staff members and print
+		var staffRoles = staffMembers.SelectMany(sm => sm.StaffRoles).Distinct().ToList();
+		foreach (var role in staffRoles.DistinctBy(x => x.Name))
 		{
-			roleSb.AppendLine($"- {staffRole.Name}");
+			roleSb.AppendLine($"- {role.Name}");
 		}
 
 		var embed = new EmbedBuilder()
@@ -103,17 +104,19 @@ public class TournamentManagementCommands : InteractionModuleBase<ShardedInterac
 		await RespondAsync(embeds: new[] { embed.Build() });
 	}
 	
-	private (List<StaffMember>, Dictionary<string, StaffRole>) ParseCsv(TextReader reader)
+	private List<StaffMember> ParseCsv(string csvContent)
 	{
 		var staffMembers = new List<StaffMember>();
-		var staffRoles = new Dictionary<string, StaffRole>();
 		var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 		{
-			HasHeaderRecord = true
+			HasHeaderRecord = true,
+			Delimiter = ","
 		};
 
-		using (var csv = new CsvReader(reader, config))
+		using (var stringReader = new StringReader(csvContent))
+		using (var csv = new CsvReader(stringReader, config))
 		{
+			csv.ReadHeader();
 			while (csv.Read())
 			{
 				var staffMember = new StaffMember
@@ -147,6 +150,6 @@ public class TournamentManagementCommands : InteractionModuleBase<ShardedInterac
 			}
 		}
 
-		return (staffMembers, staffRoles);
+		return staffMembers;
 	}
 }
