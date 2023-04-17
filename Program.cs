@@ -1,5 +1,8 @@
 ﻿using circle_coordinator.Data.Context;
+using circle_coordinator.Data.Repositories;
+using circle_coordinator.Data.Repositories.Interfaces;
 using circle_coordinator.Handlers;
+using circle_coordinator.Models.Entities;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
@@ -62,6 +65,12 @@ public class Program
 			        });
 		        })
 		        .AddSingleton<InteractionHandler>()
+		        .AddScoped<IPlayerRepository, PlayerRepository>()
+		        .AddScoped<IReplayRepository, ReplayRepository>()
+		        .AddScoped<ITeamPlayerRepository, TeamPlayerRepository>()
+		        .AddScoped<ITeamRepository, TeamRepository>()
+		        .AddScoped<ITournamentRepository, TournamentRepository>()
+		        .AddScoped<ITournamentStageRepository, TournamentStageRepository>()
 		        .AddDbContext<CCDbContext>(x => x.UseNpgsql(pgsqlConnString))
 		        .Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(10))
 		        .AddHostedService<Worker>();

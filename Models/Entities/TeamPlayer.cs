@@ -5,7 +5,7 @@ namespace circle_coordinator.Models.Entities;
 /// <summary>
 ///  Represents a player on a team
 /// </summary>
-public class TeamPlayer
+public class TeamPlayer : EntityBase
 {
 	/// <summary>
 	///  The ID of the player this team player represents

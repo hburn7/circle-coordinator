@@ -9,6 +9,11 @@ public class Tournament : EntityBase
 	[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 	public int TournamentId { get; set; }
 	/// <summary>
+	/// The Id of the guild this was created in.
+	/// </summary>
+	[Required]
+	public ulong GuildId { get; set; }
+	/// <summary>
 	///  The name of this tournament
 	/// </summary>
 	[Required]

@@ -9,7 +9,13 @@ namespace circle_coordinator.Data.Context;
 public class CCDbContext : DbContext
 {
 	public CCDbContext(DbContextOptions<CCDbContext> options) : base(options) {}
+	
+	public DbSet<Player> Players { get; set; }
+	public DbSet<Replay> Replays { get; set; }
+	public DbSet<Team> Teams { get; set; }
+	public DbSet<TeamPlayer> TeamPlayers { get; set; }
 	public DbSet<Tournament> Tournaments { get; set; }
+	public DbSet<TournamentStage> TournamentStages { get; set; }
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{

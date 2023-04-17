@@ -2,8 +2,12 @@
 
 namespace circle_coordinator.Commands.Tournament;
 
+[Group("tournament", "Commands for managing a tournament")]
 public class TournamentManagementCommands : InteractionModuleBase<ShardedInteractionContext>
 {
-	[SlashCommand("foo", "This is a test command")]
-	public async Task Foo() => await RespondAsync("Hello!");
+	[SlashCommand("create", "Creates a new tournament tied to this Discord server.")]
+	public async Task CreateTournamentAsync()
+	{
+		await RespondAsync("You are so hot!");
+	}
 }
