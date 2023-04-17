@@ -1,6 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using circle_coordinator.Database.Models.Abstractions;
+using System.ComponentModel.DataAnnotations;
 
-namespace circle_coordinator.Database.Models.Abstractions;
+namespace circle_coordinator.Database.Models;
 
 /// <summary>
 ///  Represents a regular player
