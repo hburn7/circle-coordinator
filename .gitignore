@@ -52,8 +52,8 @@ build/
 # Ignore project-specific files that vary by environment
 *.launchSettings.json
 *.userSecrets.json
-*.appsettings.json
-*.appsettings.*.json
+
+appsettings.json
 
 # Rider specific files
 .idea/
