@@ -73,6 +73,19 @@ public class RepositoryBase<T> : IRepository<T> where T : EntityBase
 		}
 	}
 
+	public async Task AddRangeAsync(IEnumerable<T> entities)
+	{
+		try
+		{
+			await _dbSet.AddRangeAsync(entities);
+			await _context.SaveChangesAsync();
+		}
+		catch (Exception e)
+		{
+			await LogDatabaseError(e);
+		}
+	}
+
 	protected Task LogDatabaseError(Exception? exception)
 	{
 		Log.Error(exception, "An error occurred during a database operation");

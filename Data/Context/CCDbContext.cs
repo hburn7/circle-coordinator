@@ -12,6 +12,9 @@ public class CCDbContext : DbContext
 	
 	public DbSet<Player> Players { get; set; }
 	public DbSet<Replay> Replays { get; set; }
+	public DbSet<StaffMember> StaffMembers { get; set; }
+	public DbSet<StaffRole> StaffRoles { get; set; }
+	public DbSet<StaffMemberRole> StaffMemberRoles { get; set; }
 	public DbSet<Team> Teams { get; set; }
 	public DbSet<TeamPlayer> TeamPlayers { get; set; }
 	public DbSet<Tournament> Tournaments { get; set; }
@@ -44,6 +47,21 @@ public class CCDbContext : DbContext
 		            .WithMany(s => s.Replays)
 		            .HasForeignKey(r => r.StageId);
 
+		modelBuilder.Entity<StaffMemberRole>(entity =>
+		{
+			entity.HasKey(e => new { e.StaffMemberId, e.StaffRoleId });
+
+			entity.HasOne(e => e.StaffMember)
+			      .WithMany(sm => sm.StaffMemberRoles)
+			      .HasForeignKey(e => e.StaffMemberId)
+			      .OnDelete(DeleteBehavior.Cascade);
+
+			entity.HasOne(e => e.StaffRole)
+			      .WithMany(sr => sr.StaffMemberRoles)
+			      .HasForeignKey(e => e.StaffRoleId)
+			      .OnDelete(DeleteBehavior.Cascade);
+		});
+
 		modelBuilder.Entity<Tournament>()
 		            .HasMany<Team>(t => t.Teams)
 		            .WithOne(t => t.Tournament)
@@ -53,6 +71,10 @@ public class CCDbContext : DbContext
 		            .HasMany<TournamentStage>(t => t.Stages)
 		            .WithOne(t => t.Tournament)
 		            .HasForeignKey(t => t.TournamentId);
+
+		modelBuilder.Entity<Tournament>()
+		            .Property(t => t.Ruleset)
+		            .HasConversion<int>();
 
 		modelBuilder.Entity<Team>()
 		            .HasMany(t => t.Players)

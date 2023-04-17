@@ -67,6 +67,8 @@ public class Program
 		        .AddSingleton<InteractionHandler>()
 		        .AddScoped<IPlayerRepository, PlayerRepository>()
 		        .AddScoped<IReplayRepository, ReplayRepository>()
+		        .AddScoped<IStaffMemberRepository, StaffMemberRepository>()
+		        .AddScoped<IStaffRoleRepository, StaffRoleRepository>()
 		        .AddScoped<ITeamPlayerRepository, TeamPlayerRepository>()
 		        .AddScoped<ITeamRepository, TeamRepository>()
 		        .AddScoped<ITournamentRepository, TournamentRepository>()

@@ -9,4 +9,5 @@ public interface IRepository<T> where T : EntityBase
 	public Task<T?> AddAsync(T entity);
 	public Task<T?> UpdateAsync(T entity);
 	public Task<T?> DeleteAsync(T entity);
+	public Task AddRangeAsync(IEnumerable<T> entities);
 }
