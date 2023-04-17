@@ -1,3 +1,4 @@
+using circle_coordinator.Handlers;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;

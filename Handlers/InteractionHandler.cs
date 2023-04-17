@@ -4,7 +4,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using System.Reflection;
 
-namespace circle_coordinator;
+namespace circle_coordinator.Handlers;
 
 public class InteractionHandler
 {
