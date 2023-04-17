@@ -9,22 +9,15 @@ public class RepositoryBase<T> : IRepository<T> where T : EntityBase
 {
 	protected readonly CCDbContext _context;
 	protected readonly DbSet<T> _dbSet;
-	
+
 	public RepositoryBase(CCDbContext context)
 	{
 		_context = context;
 		_dbSet = context.Set<T>();
 	}
-	
-	public async Task<IEnumerable<T>> GetAllAsync()
-	{
-		return await _dbSet.ToListAsync();
-	}
 
-	public async Task<T> GetByIdAsync(int id)
-	{
-		return await _dbSet.FindAsync(id);
-	}
+	public async Task<IEnumerable<T>> GetAllAsync() => await _dbSet.ToListAsync();
+	public async Task<T> GetByIdAsync(int id) => await _dbSet.FindAsync(id);
 
 	public async Task<T> AddAsync(T entity)
 	{
