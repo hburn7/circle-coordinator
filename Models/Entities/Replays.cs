@@ -1,14 +1,13 @@
-﻿using circle_coordinator.Database.Models.Abstractions;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace circle_coordinator.Database.Models;
+namespace circle_coordinator.Models.Entities;
 
 /// <summary>
 ///  Represents a replay file that belongs to a specific stage of a given tournament.
 ///  e.g. a replay file for HR3 in Grand Finals of some tournament
 /// </summary>
-public class Replay : BaseEntity
+public class Replay : EntityBase
 {
 	[Required]
 	[DatabaseGenerated(DatabaseGeneratedOption.Identity)]

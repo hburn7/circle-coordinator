@@ -1,10 +1,10 @@
-﻿using circle_coordinator.Database.Models;
-using circle_coordinator.Database.Models.Abstractions;
+﻿using circle_coordinator.Models;
+using circle_coordinator.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 #pragma warning disable CS8618
 
-namespace circle_coordinator.Database;
+namespace circle_coordinator.Data.Context;
 
 public class CCDbContext : DbContext
 {
@@ -16,9 +16,9 @@ public class CCDbContext : DbContext
 		// Configure primary keys for all entities inheriting from BaseEntity
 		foreach (var entityType in modelBuilder.Model.GetEntityTypes())
 		{
-			if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
+			if (typeof(EntityBase).IsAssignableFrom(entityType.ClrType))
 			{
-				modelBuilder.Entity(entityType.ClrType).HasKey(nameof(BaseEntity.Id));
+				modelBuilder.Entity(entityType.ClrType).HasKey(nameof(EntityBase.Id));
 			}
 		}
 
@@ -56,5 +56,28 @@ public class CCDbContext : DbContext
 		            .HasMany<Replay>(s => s.Replays)
 		            .WithOne(r => r.Stage)
 		            .HasForeignKey(r => r.StageId);
+	}
+	
+	public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+	{
+		var currentTime = DateTime.UtcNow;
+
+		// Get all added and updated entries
+		var addedOrUpdatedEntries = ChangeTracker.Entries()
+		                                         .Where(entry => entry.State == EntityState.Added || entry.State == EntityState.Modified);
+
+		foreach (var entry in addedOrUpdatedEntries)
+		{
+			if (entry.Entity is EntityBase entityBase)
+			{
+				if (entry.State == EntityState.Added)
+				{
+					entityBase.CreatedAt = currentTime;
+				}
+				entityBase.UpdatedAt = currentTime;
+			}
+		}
+
+		return await base.SaveChangesAsync(cancellationToken);
 	}
 }

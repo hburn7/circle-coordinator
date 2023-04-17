@@ -1,4 +1,4 @@
-﻿using circle_coordinator.Database;
+﻿using circle_coordinator.Data.Context;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
@@ -59,15 +59,18 @@ public class Program
 		CreateLogger(pgsqlConnString);
 	}
 
-	public static void Main(string[] args) => new Program().RunAsync().GetAwaiter().GetResult();
+	public static void Main(string[] args)
+	{
+		new Program().RunAsync().GetAwaiter().GetResult();
+	}
 
 	public async Task RunAsync()
 	{
 		var client = _services.GetRequiredService<DiscordShardedClient>();
 		var interactionService = _services.GetRequiredService<InteractionService>();
 
-		client.Log += LogDiscordEvent;
-		interactionService.Log += LogDiscordEvent;
+		client.Log += LogAsync;
+		interactionService.Log += LogAsync;
 
 		// == BEGIN APP LAUNCH ==
 		try
@@ -99,31 +102,21 @@ public class Program
 		                                                             needAutoCreateTable: true)
 	                                                             .CreateLogger();
 
-	private Task LogDiscordEvent(LogMessage msg)
+	private async Task LogAsync(LogMessage msg)
 	{
-		switch (msg.Severity)
+		var severity = msg.Severity switch
 		{
-			case LogSeverity.Critical:
-				Log.Fatal(msg.Exception, msg.Message);
-				break;
-			case LogSeverity.Error:
-				Log.Error(msg.Exception, msg.Message);
-				break;
-			case LogSeverity.Warning:
-				Log.Warning(msg.Exception, msg.Message);
-				break;
-			case LogSeverity.Info:
-				Log.Information(msg.Exception, msg.Message);
-				break;
-			case LogSeverity.Verbose:
-				Log.Verbose(msg.Exception, msg.Message);
-				break;
-			case LogSeverity.Debug:
-				Log.Debug(msg.Exception, msg.Message);
-				break;
-		}
+			LogSeverity.Critical => LogEventLevel.Fatal,
+			LogSeverity.Error => LogEventLevel.Error,
+			LogSeverity.Warning => LogEventLevel.Warning,
+			LogSeverity.Info => LogEventLevel.Information,
+			LogSeverity.Verbose => LogEventLevel.Verbose,
+			LogSeverity.Debug => LogEventLevel.Debug,
+			_ => LogEventLevel.Information
+		};
+		Log.Write(severity, msg.Exception, "[{Source}] {Message}", msg.Source, msg.Message);
 
-		return Task.CompletedTask;
+		await Task.CompletedTask;
 	}
 
 	public static bool IsDebug()

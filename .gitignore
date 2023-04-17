@@ -31,7 +31,7 @@ TestResults
 [Tt]est[Rr]esult.*
 _ReSharper*
 *.resharper*
-*.dotSettings
+*.[dD]otSettings
 
 # Windows folders
 $RECYCLE.BIN/

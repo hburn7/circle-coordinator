@@ -1,13 +1,12 @@
-﻿using circle_coordinator.Database.Models.Abstractions;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace circle_coordinator.Database.Models;
+namespace circle_coordinator.Models.Entities;
 
 /// <summary>
 ///  Represents a team in a tournament
 /// </summary>
-public class Team : BaseEntity
+public class Team : EntityBase
 {
 	[Required]
 	[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
