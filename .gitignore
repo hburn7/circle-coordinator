@@ -1,4 +1,6 @@
-﻿# Visual Studio Code files
+﻿**/logs/*
+
+# Visual Studio Code files
 .vscode/
 
 # Visual Studio files
