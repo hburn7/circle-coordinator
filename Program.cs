@@ -5,6 +5,7 @@ using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
@@ -13,8 +14,8 @@ namespace circle_coordinator;
 
 public class Program
 {
-	private readonly IConfiguration _appConfiguration;
-	private readonly DiscordSocketConfig _discordSocketConfig = new()
+	private static IConfiguration _appConfiguration;
+	private static readonly DiscordSocketConfig _discordSocketConfig = new()
 	{
 		LogLevel = LogSeverity.Verbose,
 		MessageCacheSize = 1000,
@@ -23,14 +24,22 @@ public class Program
 		LogGatewayIntentWarnings = false,
 		SuppressUnknownDispatchWarnings = true
 	};
-	private readonly IServiceProvider _services;
+	private IHost _services;
+	public Program() { CreateLogger(); }
 
-	public Program()
+	public static void Main(string[] args)
 	{
-		_appConfiguration = new ConfigurationBuilder()
-		                    .SetBasePath(Directory.GetCurrentDirectory())
-		                    .AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json"), false, true)
-		                    .Build();
+		var program = new Program();
+		program._services = CreateHostBuilder(args).Build();
+		program._services.Run();
+	}
+
+	public static IHostBuilder CreateHostBuilder(string[] args) => Host.CreateDefaultBuilder(args)
+	                                                                   .ConfigureServices(ConfigureServices);
+
+	private static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services)
+	{
+		_appConfiguration = hostContext.Configuration;
 
 		string? pgsqlConnString = _appConfiguration.GetConnectionString("DefaultConnection");
 
@@ -39,92 +48,40 @@ public class Program
 			throw new Exception("Connection string is null or empty. Please populate the connection string in appsettings.json");
 		}
 
-		_services = new ServiceCollection()
-		            .AddSingleton(_discordSocketConfig)
-		            .AddSingleton(_appConfiguration)
-		            .AddSingleton<DiscordShardedClient>()
-		            .AddSingleton<InteractionService>(serviceProvider =>
-		            {
-			            var client = serviceProvider.GetRequiredService<DiscordShardedClient>();
-			            return new InteractionService(client, new InteractionServiceConfig
-			            {
-				            LogLevel = LogSeverity.Verbose,
-				            DefaultRunMode = RunMode.Async
-			            });
-		            })
-		            .AddSingleton<InteractionHandler>()
-		            .AddDbContext<CCDbContext>(x => x.UseNpgsql())
-		            .BuildServiceProvider();
-
-		CreateLogger(pgsqlConnString);
+		services.AddSingleton(_discordSocketConfig)
+		        .AddSingleton(_appConfiguration)
+		        .AddSingleton<DiscordShardedClient>()
+		        .AddSingleton<InteractionService>(serviceProvider =>
+		        {
+			        var client = serviceProvider.GetRequiredService<DiscordShardedClient>();
+			        return new InteractionService(client, new InteractionServiceConfig
+			        {
+				        LogLevel = LogSeverity.Verbose,
+				        DefaultRunMode = RunMode.Async
+			        });
+		        })
+		        .AddSingleton<InteractionHandler>()
+		        .AddDbContext<CCDbContext>(x => x.UseNpgsql(pgsqlConnString))
+		        .Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(10))
+		        .AddHostedService<Worker>();
 	}
 
-	public static void Main(string[] args)
-	{
-		new Program().RunAsync().GetAwaiter().GetResult();
-	}
-
-	public async Task RunAsync()
-	{
-		var client = _services.GetRequiredService<DiscordShardedClient>();
-		var interactionService = _services.GetRequiredService<InteractionService>();
-
-		client.Log += LogAsync;
-		interactionService.Log += LogAsync;
-
-		// == BEGIN APP LAUNCH ==
-		try
-		{
-			await _services.GetRequiredService<InteractionHandler>()
-			               .InitializeAsync();
-
-			await client.LoginAsync(TokenType.Bot, _appConfiguration["Discord:Token"]);
-			await client.StartAsync();
-
-			await Task.Delay(Timeout.Infinite);
-		}
-		catch (Exception e)
-		{
-			Log.Fatal(e, "Application encountered an unhandled exception: {Message}", e.Message);
-			throw;
-		}
-
-		// == NO CODE HERE ==
-	}
-
-	private void CreateLogger(string connString) => Log.Logger = new LoggerConfiguration()
-	                                                             .MinimumLevel.Verbose()
-	                                                             .Enrich.FromLogContext()
-	                                                             .WriteTo.Console(theme: AnsiConsoleTheme.Code)
-	                                                             .WriteTo.File($"logs/{DateTime.Now:u}.txt")
-	                                                             .WriteTo.PostgreSQL(connString, "Logs",
-		                                                             restrictedToMinimumLevel: LogEventLevel.Verbose,
-		                                                             needAutoCreateTable: true)
-	                                                             .CreateLogger();
-
-	private async Task LogAsync(LogMessage msg)
-	{
-		var severity = msg.Severity switch
-		{
-			LogSeverity.Critical => LogEventLevel.Fatal,
-			LogSeverity.Error => LogEventLevel.Error,
-			LogSeverity.Warning => LogEventLevel.Warning,
-			LogSeverity.Info => LogEventLevel.Information,
-			LogSeverity.Verbose => LogEventLevel.Verbose,
-			LogSeverity.Debug => LogEventLevel.Debug,
-			_ => LogEventLevel.Information
-		};
-		Log.Write(severity, msg.Exception, "[{Source}] {Message}", msg.Source, msg.Message);
-
-		await Task.CompletedTask;
-	}
+	private void CreateLogger() => Log.Logger = new LoggerConfiguration()
+	                                            .MinimumLevel.Verbose()
+	                                            .Enrich.FromLogContext()
+	                                            .WriteTo.Console(theme: AnsiConsoleTheme.Code)
+	                                            .WriteTo.File($"logs/{DateTime.Now:u}.txt")
+	                                            .WriteTo.PostgreSQL(_appConfiguration.GetConnectionString("DefaultConnection"), "Logs",
+		                                            restrictedToMinimumLevel: LogEventLevel.Verbose,
+		                                            needAutoCreateTable: true)
+	                                            .CreateLogger();
 
 	public static bool IsDebug()
 	{
 #if DEBUG
 		return true;
 #else
-		return false;
+        return false;
 #endif
 	}
 }

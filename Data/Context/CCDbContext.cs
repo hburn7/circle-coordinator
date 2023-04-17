@@ -57,7 +57,7 @@ public class CCDbContext : DbContext
 		            .WithOne(r => r.Stage)
 		            .HasForeignKey(r => r.StageId);
 	}
-	
+
 	public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
 	{
 		var currentTime = DateTime.UtcNow;
@@ -74,6 +74,7 @@ public class CCDbContext : DbContext
 				{
 					entityBase.CreatedAt = currentTime;
 				}
+
 				entityBase.UpdatedAt = currentTime;
 			}
 		}
