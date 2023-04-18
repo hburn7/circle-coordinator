@@ -1,4 +1,4 @@
-﻿using circle_coordinator.Data.Context;
+﻿using circle_coordinator.Base;
 using circle_coordinator.Data.Repositories.Interfaces;
 using circle_coordinator.Models.Entities;
 using CsvHelper;
@@ -13,7 +13,7 @@ namespace circle_coordinator.Commands.Tournament;
 [Group("tournament", "Commands for managing a tournament")]
 [EnabledInDm(false)]
 [DefaultMemberPermissions(GuildPermission.ManageGuild)]
-public class TournamentManagementCommands : InteractionModuleBase<ShardedInteractionContext>
+public class TournamentManagementCommands : CCModuleBase<ShardedInteractionContext>
 {
 	private readonly ITournamentRepository _tournamentRepository;
 	private readonly IStaffMemberRepository _staffMemberRepository;
@@ -28,19 +28,47 @@ public class TournamentManagementCommands : InteractionModuleBase<ShardedInterac
 	}
 
 	[SlashCommand("new", "Creates a new tournament tied to this Discord server.")]
-	public async Task CreateTournamentAsync(string name, string abbreviation, string? description = null, string? discordInviteUrl = null,
-		string? forumPostUrl = null, string? bracketUrl = null, string? streamUrl = null, string? twitterUrl = null,
-		string? twitchUrl = null, string? youtubeUrl = null)
+	public async Task CreateTournamentAsync(string name, string abbreviation, string? description = null,
+		[Summary(description: "Leave blank to indicate no minimum")] int? minimumRank = null, 
+		[Summary(description: "Leave blank to indicate no maximum.")] int? maximumRank = null,
+		string? discordInviteUrl = null,
+		string? forumPostUrl = null, string? bracketUrl = null,
+		string? twitchUrl = null, string? youtubeUrl = null, string? twitterUrl = null)
 	{
-		var t = new Models.Entities.Tournament
+		var tournaments = _tournamentRepository.GetAllForGuild(Context.Guild.Id);
+		if (tournaments.Any())
+		{
+			// respond with button
+			var builder = new ComponentBuilder()
+			              .WithButton("Yes", "tournament-new-approve", ButtonStyle.Success)
+			              .WithButton("Cancel", "tournament-new-cancel", ButtonStyle.Danger)
+			              .Build();
+
+			await RespondAsync("There is already at least one tournament tied to this server, " +
+			                   "are you sure you want to make another?", components: builder);
+			
+			// TODO: Figure out how to handle the button click
+		}
+		
+		var tournament = new Models.Entities.Tournament
 		{
 			GuildId = Context.Guild.Id,
 			Name = name,
+			CreatorTag = Context.User.ToString(),
+			CreatorId = Context.User.Id,
 			Abbreviation = abbreviation,
-			Description = description
+			Description = description,
+			DiscordPermanentInviteUrl = discordInviteUrl,
+			ForumUrl = forumPostUrl,
+			BracketUrl = bracketUrl,
+			TwitchUrl = new List<string> { twitchUrl },
+			YoutubeUrl = new List<string> { youtubeUrl },
+			TwitterUrl = new List<string> { twitterUrl },
+			MinimumRank = minimumRank,
+			MaximumRank = maximumRank
 		};
 
-		await _tournamentRepository.AddAsync(t);
+		await _tournamentRepository.AddAsync(tournament);
 
 		await RespondAsync("Nice! You added a tournament!");
 	}
@@ -63,6 +91,13 @@ public class TournamentManagementCommands : InteractionModuleBase<ShardedInterac
 		   StaffRoleId (int)
 		   Name (string)
 		 */
+		
+		var tournamentsForGuild = _tournamentRepository.GetAllForGuild(Context.Guild.Id);
+		if (!tournamentsForGuild.Any())
+		{
+			await RespondErrorAsync("There are no tournaments for this server. Please create one first.");
+			return;
+		}
 		
 		if (!csvFile.Filename.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
 		{

@@ -58,10 +58,10 @@ public class Tournament : EntityBase
 	
 	public string? DiscordPermanentInviteUrl { get; set; }
 	public string? BracketUrl { get; set; }
-	public string[]? TwitterUrl { get; set; }
-	public string[]? TwitchUrl { get; set; }
-	public string[]? YoutubeUrl { get; set; }
-	public string[]? DonationUrls { get; set; }
+	public List<string?> TwitterUrl { get; set; }
+	public List<string?> TwitchUrl { get; set; }
+	public List<string?> YoutubeUrl { get; set; }
+	public List<string?> DonationUrls { get; set; }
 	public DateTime? RegistrationOpenDate { get; set; }
 	public DateTime? RegistrationCloseDate { get; set; }
 	public DateTime? TournamentStartDate { get; set; }
@@ -71,6 +71,10 @@ public class Tournament : EntityBase
 	///  The players in this tournament
 	/// </summary>
 	public ICollection<Player> Players { get; set; }
+	/// <summary>
+	/// The staff in this tournament
+	/// </summary>
+	public ICollection<StaffMember> StaffMembers { get; set; }
 	/// <summary>
 	///  The teams that are participating in this tournament
 	/// </summary>

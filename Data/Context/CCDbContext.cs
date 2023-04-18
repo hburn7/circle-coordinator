@@ -71,10 +71,16 @@ public class CCDbContext : DbContext
 		            .HasMany<TournamentStage>(t => t.Stages)
 		            .WithOne(t => t.Tournament)
 		            .HasForeignKey(t => t.TournamentId);
+		
+		modelBuilder.Entity<Tournament>()
+		            .HasMany<StaffMember>(t => t.StaffMembers)
+		            .WithOne(s => s.Tournament)
+		            .HasForeignKey(s => s.TournamentId);
 
 		modelBuilder.Entity<Tournament>()
 		            .Property(t => t.Ruleset)
 		            .HasConversion<int>();
+		
 
 		modelBuilder.Entity<Team>()
 		            .HasMany(t => t.Players)
